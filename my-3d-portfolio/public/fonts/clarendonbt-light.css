@@ -1,0 +1,9 @@
+@font-face {
+	font-family: 'ClarendonBT-Light';
+	src: url('/my-3d-portfolio/public/fonts/clarendonbt/clarendonbt-light.eot'); /* IE 9 Compatibility Mode */
+	src: url('/my-3d-portfolio/public/fonts/clarendonbt/clarendonbt-light.eot?#iefix') format('embedded-opentype'), /* IE < 9 */
+		url('/my-3d-portfolio/public/fonts/clarendonbt/clarendonbt-light.woff2') format('woff2'), /* Super Modern Browsers */
+		url('/my-3d-portfolio/public/fonts/clarendonbt/clarendonbt-light.woff') format('woff'), /* Firefox >= 3.6, any other modern browser */
+		url('/my-3d-portfolio/public/fonts/clarendonbt/clarendonbt-light.ttf') format('truetype'), /* Safari, Android, iOS */
+		url('fonts/clarendonbt-light.svg#clarendonbt-light') format('svg'); /* Chrome < 4, Legacy iOS */
+}
