@@ -1,99 +1,139 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
+
+function ElegantWave({ isOpen, mouseY }) {
+  const mesh = useRef()
+  const material = useRef()
+  const hoverProgress = useRef(0)
+  
+  useFrame(({ clock }) => {
+    if (!mesh.current) return
+    
+    const time = clock.getElapsedTime()
+    const positions = mesh.current.geometry.attributes.position
+    const factor = isOpen ? 0.3 : 1.0 // Уменьшаем эффект при открытии
+    
+    // Плавное следование за курсором
+    hoverProgress.current = THREE.MathUtils.lerp(
+      hoverProgress.current, 
+      isOpen ? 0 : 1, 
+      0.1
+    )
+    
+    const targetY = (mouseY / window.innerHeight) * 2 - 1 // Нормализуем в [-1, 1]
+    
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i)
+      const y = positions.getY(i)
+      
+      // Органичная волна с плавными изгибами
+      const wave = 
+        Math.sin(x * 5 + time * 1.5) * 0.15 * factor * hoverProgress.current +
+        Math.cos(y * 3 + time) * 0.1 * factor * hoverProgress.current +
+        Math.sin(x * 10 + y * 5 + time * 2) * 0.05 * factor * hoverProgress.current
+      
+      // Плавное отклонение к курсору
+      const followEffect = (1 - Math.abs(y - targetY)) * 0.3 * hoverProgress.current
+      
+      positions.setZ(i, wave + followEffect)
+    }
+    
+    positions.needsUpdate = true
+    
+    // Плавное изменение цвета
+    material.current.color.lerp(
+      new THREE.Color(isOpen ? '#ffffff' : '#000000'), 
+      0.1
+    )
+  })
+
+  return (
+    <mesh ref={mesh}>
+      <planeGeometry args={[1, 2, 64, 64]} /> {/* Больше детализации */}
+      <meshStandardMaterial 
+        ref={material}
+        roughness={0.15}
+        metalness={0.1}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  )
+}
 
 export default function WaveHeader() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const waveRef = useRef(null);
-  const [wavePosition, setWavePosition] = useState(50);
+  const [isOpen, setIsOpen] = useState(false)
+  const [mouseY, setMouseY] = useState(0)
+  const containerRef = useRef()
 
-  // Анимация волны по курсору
   const handleMouseMove = (e) => {
-    if (waveRef.current && !isMenuOpen) {
-      const rect = waveRef.current.getBoundingClientRect();
-      setWavePosition(((e.clientY - rect.top) / rect.height) * 100);
-    }
-  };
-
-  // Закрытие по ESC
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setIsMenuOpen(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (rect) setMouseY(e.clientY - rect.top)
+  }
 
   return (
-    <>
-      {/* Контейнер волны */}
-      <div 
-        ref={waveRef}
-        className="fixed top-0 right-0 h-full z-50 w-1/2"
+    <div className="fixed top-0 right-0 z-50 h-screen w-20">
+      <div
+        ref={containerRef}
+        className={`h-full w-full transition-all duration-500 ${isOpen ? 'w-screen' : 'w-20'}`}
         onMouseMove={handleMouseMove}
+        onClick={() => setIsOpen(!isOpen)}
       >
-        {/* Анимированная волна */}
-        <div 
-          className={`absolute right-0 h-full bg-black transition-all duration-500 ease-in-out ${
-            isMenuOpen ? 'w-full' : 'w-20'
-          }`}
-          style={{
-            clipPath: isMenuOpen 
-              ? 'none' 
-              : `path('M0 ${wavePosition - 10}% Q 25% ${wavePosition}% 50% ${wavePosition - 10}% T 100% ${wavePosition}% L 100% 100% L 0 100% Z')`
-          }}
-        >
-          {/* Кнопка меню */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {isMenuOpen ? (
-              <CloseIcon />
-            ) : (
-              <MenuIcon />
-            )}
-          </button>
-        </div>
+        <Canvas>
+          <ambientLight intensity={0.7} />
+          <pointLight position={[5, 5, 5]} intensity={1.5} />
+          <ElegantWave isOpen={isOpen} mouseY={mouseY} />
+        </Canvas>
 
-        {/* Контент меню */}
-        {isMenuOpen && (
-          <div className="absolute inset-0 flex flex-col justify-center items-start p-12 text-white">
-            <nav className="space-y-6">
-              <a href="/work" className="block text-2xl hover:text-gray-300">Work</a>
-              <a href="/services" className="block text-2xl hover:text-gray-300">Services</a>
-              <div className="space-y-2">
-                <a href="/about" className="block hover:text-gray-300">About</a>
-                <a href="/stories" className="block hover:text-gray-300">Stories</a>
-                <a href="/product" className="block hover:text-gray-300">Product</a>
-              </div>
-            </nav>
-            
-            <div className="mt-auto flex space-x-4">
-              <a href="#" className="hover:text-gray-300">Facebook</a>
-              <a href="#" className="hover:text-gray-300">Instagram</a>
-              <a href="#" className="hover:text-gray-300">Twitter</a>
+        <button 
+          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10
+            text-2xl transition-all duration-300 ${isOpen ? 'text-black' : 'text-white'}`}
+        >
+          {isOpen ? (
+            <CloseIcon className="w-8 h-8" />
+          ) : (
+            <MenuIcon className="w-8 h-8" />
+          )}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="fixed inset-0 z-40 flex bg-black text-white p-12">
+          <div className="w-20 h-full" />
+          <div className="flex-1 pl-8">
+            <h1 className="text-5xl font-bold mb-8">HELLO MONDAY</h1>
+            <div className="text-xl opacity-80 mb-12">We craft digital experiences</div>
+            <div className="space-y-6">
+              <NavItem>Work</NavItem>
+              <NavItem>About</NavItem>
+              <NavItem>Contact</NavItem>
             </div>
           </div>
-        )}
-      </div>
-    </>
-  );
+        </div>
+      )}
+    </div>
+  )
 }
 
-// Выносим иконки в отдельные компоненты
-function MenuIcon() {
-  return (
-    <svg width="34" height="34" viewBox="0 0 19 15" fill="white">
-      {/* Ваш SVG код меню */}
-    </svg>
-  );
-}
+// Компоненты иконок
+const MenuIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none">
+    <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
 
-function CloseIcon() {
-  return (
-    <svg width="34" height="34" viewBox="0 0 34 34" fill="white">
-      {/* Ваш SVG код закрытия */}
-    </svg>
-  );
-}
+const CloseIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none">
+    <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
+
+const NavItem = ({ children }) => (
+  <div className="text-3xl font-medium hover:opacity-70 transition-opacity cursor-pointer">
+    {children}
+  </div>
+)

@@ -82,4 +82,7 @@ body {
  letter-spacing: -1px;
 }
 
+.menu-transition {
+  transition: width 0.3s ease, opacity 0.3s ease;
+}
 
