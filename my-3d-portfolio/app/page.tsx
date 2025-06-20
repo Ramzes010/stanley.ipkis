@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Special_Elite } from 'next/font/google';
 import localFont from 'next/font/local';
-import WaveHeader from './components/WaveHeader';
+import WaveSidebar from './components/WaveSidebar';
 
 
 // Подключение шрифтов
@@ -55,6 +55,9 @@ export default function Home() {
 
   return (
     <div className="relative h-screen w-full bg-white text-black overflow-hidden">
+
+            <WaveSidebar />
+
       {/* Логотип слева */}
       <div className="absolute left-10 top-10 z-20">
         <img src="img/logo-2.svg" alt="Logo" className="h-16 w-auto" />
@@ -118,7 +121,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-       <WaveHeader />
     </div>
     
   );
