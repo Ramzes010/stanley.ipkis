@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Special_Elite } from 'next/font/google';
 import localFont from 'next/font/local';
 import WaveSidebar from './components/WaveSidebar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 // Подключение шрифтов
@@ -20,6 +21,7 @@ const specialElite = Special_Elite({
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [playDrop, setPlayDrop] = useState(false);
 
   const words = [
     "Тревожное расстройство",
@@ -44,14 +46,36 @@ export default function Home() {
     
     // Анимация смены слов
     const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % words.length);
-    }, 3000); // Меняем слово каждые 3 секунды
+      setPlayDrop(true); // Запускаем анимацию капли
+    }, 3000); // Интервал смены
 
     return () => {
       window.removeEventListener('resize', checkMobile);
       clearInterval(interval);
     };
   }, []);
+
+  const wordVariants = {
+    hidden: { y: -30, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
+    exit: { y: 30, opacity: 0, transition: { duration: 0.3 } },
+  };
+
+  const dotVariants = {
+    // Начинает невидимой, немного выше
+    initial: { opacity: 10, y: -10 },
+    // Появляется и плавно падает
+    fall: {
+      opacity: 1,
+      y: 1240,
+      transition: { duration: 1,  },
+    },
+    // Исчезает в конце падения
+    disappear: {
+      opacity: 0,
+      transition: { duration: 0.5 },
+    },
+  };
 
   return (
     <div className="relative h-screen w-full bg-white text-black overflow-hidden">
@@ -95,33 +119,45 @@ export default function Home() {
       {/* Текст под анимацией */}
       <div className="absolute bottom-20 left-0 right-0 z-20 text-center">
         {/* Заголовок меньшего размера */}
-        <h2 className={`${specialEliteRu.className} text-xl md:text-2xl mb-4 antialiased`}>
-          С чем поможет справиться тебе Стэн?
+        <h2 className={`${specialEliteRu.className} text-[5px] md:text-[14px]  antialiased text-bold`}>
+          (С чем поможет справиться тебе Стэн?)
         </h2>
         
-        {/* Анимированный заголовок с вертикальной анимацией (теперь падает сверху) */}
-        <div className="relative h-16 overflow-hidden mx-auto w-fit">
-          <div className="relative h-full" style={{
-            transform: `translateY(${currentWordIndex * -100}%)`, // Изменено на отрицательное значение
-            transition: 'transform 0.5s ease-in-out'
-          }}>
-            {words.map((word, index) => (
-              <div 
-                key={word}
-                className={`flex items-center justify-center h-16 text-2xl md:text-4xl font-bold ${
-                  specialEliteRu.className
-                }`}
-                style={{
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}
+        {/* Контейнер для анимированного текста и точки */}
+        <div className="flex flex-col items-center">
+          <div className="relative h-16 w-full max-w-lg overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentWordIndex}
+                variants={wordVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${specialEliteRu.className}`}
+                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
               >
-                {word}
-              </div>
-            ))}
+                {words[currentWordIndex]}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          
+          {/* Анимированная точка */}
+          <div className="h-4 mt-4">
+            <motion.div
+              className="h-1.5 w-1.5 rounded-full bg-black/80"
+              variants={dotVariants}
+              initial="initial"
+              animate={playDrop ? ['fall', 'disappear'] : 'initial'}
+              onAnimationComplete={(definition) => {
+                if (playDrop && definition === 'disappear') {
+                  setCurrentWordIndex((prev) => (prev + 1) % words.length);
+                  setPlayDrop(false);
+                }
+              }}
+            />
           </div>
         </div>
       </div>
     </div>
-    
   );
 }

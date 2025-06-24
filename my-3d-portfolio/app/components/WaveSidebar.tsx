@@ -1,73 +1,148 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function WavySidebar() {
+export default function FullScreenMenu() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleMenu = () => setIsOpen(!isOpen);
+
+  const menuVariants = {
+    open: {
+      x: '0%',
+      borderTopLeftRadius: '0%',
+      borderBottomLeftRadius: '0%',
+    },
+    closed: {
+      x: '100%',
+      borderTopLeftRadius: '75%',
+      borderBottomLeftRadius: '30%',
+    },
+  };
+
+  const menuTransition = {
+    duration: 0.8,
+  };
+
+  const navContainerVariants = {
+    open: {
+      transition: { staggerChildren: 0.07, delayChildren: 0.3 },
+    },
+    closed: {
+      transition: { staggerChildren: 0.05, staggerDirection: -1 },
+    },
+  };
+
+  const navItemVariants = {
+    open: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        y: { stiffness: 1000, velocity: -100 },
+      },
+    },
+    closed: {
+      y: 50,
+      opacity: 0,
+      transition: {
+        y: { stiffness: 1000 },
+      },
+    },
+  };
+  
+  const navItems = ["Услуги", "Помощь", "Отзывы", "Контакты"];
 
   return (
     <>
-      {/* Триггерная волна справа */}
-      {!isOpen && (
-        <div
-          onClick={toggleSidebar}
-          className="fixed right-0 top-0 z-30 h-full w-12 cursor-pointer"
+      {/* Анимированная волна-триггер */}
+      <div
+        onClick={toggleMenu}
+        className={`fixed right-0 top-0 z-50 h-full w-16 cursor-pointer`}
+      >
+        <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          className="h-full w-full"
         >
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-            <path d="M0,0 C40,50 40,50 0,100 L100,100 L100,0 Z" fill="black" />
-          </svg>
-          <div className="absolute top-1/2 right-2 -translate-y-1/2 text-white">
-            {/* Ваша иконка */}
-            <span className="text-2xl">≡</span>
-          </div>
-        </div>
-      )}
+          <motion.path
+            d="M100,15 Q-100,50 100,85 L100,100 L200,10 Z"
+            initial={false}
+            animate={{ fill: isOpen ? 'white' : 'black' }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+          />
+        </svg>
 
-      {/* Меню */}
+        {/* Анимация иконки-бургера */}
+        <motion.div
+          className="absolute right-4 top-1/2 -translate-y-1/2"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: isOpen ? 0 : 1 }}
+          transition={{ duration: 0.25 }}
+        >
+          <img
+            src="/img/icons/menu-2.svg"
+            alt="Open menu"
+            className="h-8 w-8 object-contain"
+          />
+        </motion.div>
+
+        {/* Анимация иконки-крестика */}
+        <motion.div
+          className="absolute right-4 top-1/2 -translate-y-1/2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isOpen ? 1 : 0 }}
+          transition={{ duration: 0.25, delay: isOpen ? 0.2 : 0 }}
+        >
+          <img
+            src="/img/icons/X.svg"
+            alt="Close menu"
+            className="h-10 w-10 object-contain"
+          />
+        </motion.div>
+      </div>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ duration: 0.6, ease: 'easeInOut' }}
-            className="fixed inset-0 z-40 flex bg-black text-white"
+            variants={menuVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            transition={menuTransition}
+            className="fixed inset-0 z-40 flex overflow-hidden bg-black text-white"
           >
-            {/* Волна слева */}
-            <div
-              onClick={toggleSidebar}
-              className="relative z-50 h-full w-12 cursor-pointer"
-            >
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-                <path d="M100,0 C60,50 60,50 100,100 L0,100 L0,0 Z" fill="white" />
-              </svg>
-              <div className="absolute top-1/2 left-2 -translate-y-1/2 text-black">
-                <span className="text-2xl">×</span>
-              </div>
-            </div>
-
-            {/* Контент */}
-            <div className="flex flex-1 flex-col justify-between px-12 py-10">
+            <div className="flex w-full justify-between p-8 pt-24 md:p-16 md:pt-32">
+              {/* Left Side: Logo */}
               <div>
-                {/* Ваш логотип */}
-                <div className="mb-10">
-                  <img src="/img/logo-2.svg" alt="Logo" className="h-16 w-auto" />
-                </div>
-
-                {/* Основные кнопки */}
-                <nav className="flex flex-col gap-6 text-4xl font-bold">
-                  <button>Обо мне</button>
-                  <button>Услуги</button>
-                  <button>Отзывы</button>
-                  <button>Контакты</button>
-                </nav>
+                <img
+                  src="/img/logo-2.svg"
+                  alt="Logo"
+                  className="h-16 w-auto"
+                />
               </div>
 
-              {/* Соцсети */}
-              <div className="flex gap-6">
-                <button>WhatsApp</button>
-                <button>Instagram</button>
+              {/* Right Side: Nav and Social */}
+              <div className="flex flex-col items-end justify-between">
+                <motion.nav
+                  variants={navContainerVariants}
+                  initial="closed"
+                  animate="open"
+                  exit="closed"
+                  className="flex flex-col items-end gap-6 text-4xl font-bold menu-front"
+                >
+                  {navItems.map((item) => (
+                    <motion.button
+                      key={item}
+                      variants={navItemVariants}
+                      className="text-right"
+                    >
+                      {item}
+                    </motion.button>
+                  ))}
+                </motion.nav>
+                <div className="flex gap-6 text-lg">
+                  <button>WhatsApp</button>
+                  <button>Instagram</button>
+                </div>
               </div>
             </div>
           </motion.div>
