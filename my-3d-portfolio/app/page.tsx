@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Special_Elite } from 'next/font/google';
 import localFont from 'next/font/local';
 import WaveSidebar from './components/WaveSidebar';
+import AnimatedButton from './components/AnimatedButton'
 import { motion, AnimatePresence } from 'framer-motion';
 
 
@@ -81,7 +82,7 @@ export default function Home() {
     <div className="relative h-screen w-full bg-white text-black overflow-hidden">
 
             <WaveSidebar />
-
+            
       {/* Логотип слева */}
       <div className="absolute left-10 top-10 z-20">
         <img src="img/logo-2.svg" alt="Logo" className="h-16 w-auto" />
@@ -122,7 +123,7 @@ export default function Home() {
         <h2 className={`${specialEliteRu.className} text-[5px] md:text-[14px]  antialiased text-bold`}>
           (С чем поможет справиться тебе Стэн?)
         </h2>
-        
+        <AnimatedButton>Наведи на меня</AnimatedButton>
         {/* Контейнер для анимированного текста и точки */}
         <div className="flex flex-col items-center">
           <div className="relative h-16 w-full max-w-lg overflow-hidden">

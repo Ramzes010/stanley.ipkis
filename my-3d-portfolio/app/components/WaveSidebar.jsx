@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FullScreenMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  // Варианты для меню (оставим без изменений)
   const menuVariants = {
     open: {
       x: '0%',
@@ -48,8 +50,35 @@ export default function FullScreenMenu() {
       },
     },
   };
-  
-  const navItems = ["Услуги", "Помощь", "Отзывы", "Контакты"];
+
+  const navItems = ['Услуги', 'Помощь', 'Отзывы', 'Контакты'];
+
+  // Анимация точки с падением и деформацией
+  const dotVariants = {
+    initial: {
+      opacity: 0,
+      y: -20,
+      scaleX: 1,
+      scaleY: 1,
+      borderRadius: '50%',
+    },
+    animate: {
+      opacity: 1,
+      y: [ -20, 20, 0 ],
+      scaleX: [1, 0.7, 1],
+      scaleY: [1, 1.6, 1],
+      borderRadius: ['50%', '40% / 70%', '50%'],
+      transition: { duration: 0.2, ease: 'easeOut' },
+    },
+    exit: {
+      opacity: 0,
+      y: [0, 20, 40],
+      scaleX: [1, 0.7, 1],
+      scaleY: [1, 1.6, 1],
+      borderRadius: ['50%', '40% / 70%', '50%'],
+      transition: { duration: 0.2, ease: 'easeIn' },
+    },
+  };
 
   return (
     <>
@@ -71,7 +100,7 @@ export default function FullScreenMenu() {
           />
         </svg>
 
-        {/* Анимация иконки-бургера */}
+        {/* Иконка-бургер */}
         <motion.div
           className="absolute right-4 top-1/2 -translate-y-1/2"
           initial={{ opacity: 1 }}
@@ -85,7 +114,7 @@ export default function FullScreenMenu() {
           />
         </motion.div>
 
-        {/* Анимация иконки-крестика */}
+        {/* Иконка-крестик */}
         <motion.div
           className="absolute right-4 top-1/2 -translate-y-1/2"
           initial={{ opacity: 0 }}
@@ -110,38 +139,71 @@ export default function FullScreenMenu() {
             transition={menuTransition}
             className="fixed inset-0 z-40 flex overflow-hidden bg-black text-white"
           >
-            <div className="flex w-full justify-between p-8 pt-24 md:p-16 md:pt-32">
-              {/* Left Side: Logo */}
+            <div className="flex w-full justify-between pt-6 pb-8 px-8 pt-10 md:p-16 md:pt-12">
+              {/* Логотип */}
               <div>
                 <img
                   src="/img/logo-2.svg"
                   alt="Logo"
-                  className="h-16 w-auto"
+                  className="h-[6vw] w-auto"
                 />
               </div>
 
-              {/* Right Side: Nav and Social */}
-              <div className="flex flex-col items-end justify-between">
+              {/* Навигация + соцсети */}
+              <div className="flex flex-col items-start justify-between ">
                 <motion.nav
                   variants={navContainerVariants}
                   initial="closed"
                   animate="open"
                   exit="closed"
-                  className="flex flex-col items-end gap-6 text-4xl font-bold menu-front"
+                  className="flex flex-col items-start gap-6 text-[4vw] mr-[20vw] font-bold menu-front "
                 >
-                  {navItems.map((item) => (
-                    <motion.button
+                  {navItems.map((item, i) => (
+                    <motion.div
                       key={item}
                       variants={navItemVariants}
-                      className="text-right"
+                      className="relative flex items-center cursor-pointer"
+                      onHoverStart={() => setHoveredIndex(i)}
+                      onHoverEnd={() => setHoveredIndex(null)}
+                      style={{ gap: '0.8rem ' }}
                     >
-                      {item}
-                    </motion.button>
+                      <AnimatePresence>
+                        {hoveredIndex === i && (
+                          <motion.div
+                            className="bg-white"
+                            style={{
+                              width: '0.5vw',
+                              height: '0.5vw',
+                              borderRadius: '50%',
+                              position: 'absolute',
+                              left: '-2.5vw',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                            }}
+                            variants={dotVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                          />
+                        )}
+                      </AnimatePresence>
+
+                      <motion.button
+                        className="text-right cursor-pointer"
+                        animate={{
+                          x: hoveredIndex === i ? 10 : 0,
+                          transition: { duration: 0.3, ease: 'easeOut' },
+                        }}
+                      >
+                        {item}
+                      </motion.button>
+                    </motion.div>
                   ))}
                 </motion.nav>
+
                 <div className="flex gap-6 text-lg">
-                  <button>WhatsApp</button>
-                  <button>Instagram</button>
+                  <button className="cursor-pointer">WhatsApp</button>
+                  <button className="cursor-pointer">Instagram</button>
                 </div>
               </div>
             </div>
