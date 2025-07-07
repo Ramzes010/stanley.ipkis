@@ -3,9 +3,8 @@ import { useState, useEffect } from 'react';
 import { Special_Elite } from 'next/font/google';
 import localFont from 'next/font/local';
 import WaveSidebar from './components/WaveSidebar';
-import AnimatedButton from './components/AnimatedButton'
 import { motion, AnimatePresence } from 'framer-motion';
-
+import AnimatedLogo from "./components/AnimatedLogo";
 
 // Подключение шрифтов
 const specialEliteRu = localFont({
@@ -22,7 +21,7 @@ const specialElite = Special_Elite({
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [playDrop, setPlayDrop] = useState(false);
+  const [animationPhase, setAnimationPhase] = useState('enter');
 
   const words = [
     "Тревожное расстройство",
@@ -44,45 +43,82 @@ export default function Home() {
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
-    // Анимация смены слов
-    const interval = setInterval(() => {
-      setPlayDrop(true); // Запускаем анимацию капли
-    }, 3000); // Интервал смены
 
     return () => {
       window.removeEventListener('resize', checkMobile);
-      clearInterval(interval);
     };
   }, []);
 
+  useEffect(() => {
+    // Таймер для основного показа слова
+    const showTimer = setTimeout(() => {
+      setAnimationPhase('visible');
+    }, 300); // Появление элементов
+
+    // Таймер для начала исчезновения
+    const hideTimer = setTimeout(() => {
+      setAnimationPhase('exit');
+    }, 2500); // Время показа слова
+
+    // Таймер для смены слова
+    const changeTimer = setTimeout(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % words.length);
+      setAnimationPhase('enter');
+    }, 3000); // Полный цикл анимации
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+      clearTimeout(changeTimer);
+    };
+  }, [currentWordIndex]);
+
+  // Анимация для текста
   const wordVariants = {
-    hidden: { y: -30, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-    exit: { y: 30, opacity: 0, transition: { duration: 0.3 } },
+    enter: {
+      y: -30,
+      opacity: 0,
+      transition: { duration: 0.5, delay: 0.2 }
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 }
+    },
+    exit: {
+      y: 30,
+      opacity: 0,
+      transition: { duration: 0.3 }
+    }
   };
 
+  // Анимация для точки
   const dotVariants = {
-    // Начинает невидимой, немного выше
-    initial: { opacity: 10, y: -10 },
-    // Появляется и плавно падает
-    fall: {
-      opacity: 1,
-      y: 1240,
-      transition: { duration: 1,  },
-    },
-    // Исчезает в конце падения
-    disappear: {
+    enter: {
       opacity: 0,
-      transition: { duration: 0.5 },
+      y: -20,
+      transition: { duration: 0.1 } // Появляется быстрее текста
     },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.3 }
+    },
+    exit: {
+      opacity: 0,
+      y: 40,
+      scaleY: 1.5,
+      transition: { 
+        duration: 0.4,
+        ease: [0.17, 0.67, 0.83, 0.67] // Эффект "падения"
+      }
+    }
   };
 
   return (
     <div className="relative h-screen w-full bg-white text-black overflow-hidden">
-
-            <WaveSidebar />
-            
+      <WaveSidebar />
+      
       {/* Логотип слева */}
       <div className="absolute left-10 top-10 z-20">
         <img src="img/logo-2.svg" alt="Logo" className="h-16 w-auto" />
@@ -119,21 +155,18 @@ export default function Home() {
 
       {/* Текст под анимацией */}
       <div className="absolute bottom-20 left-0 right-0 z-20 text-center">
-        {/* Заголовок меньшего размера */}
-        <h2 className={`${specialEliteRu.className} text-[5px] md:text-[14px]  antialiased text-bold`}>
+        <h2 className={`${specialEliteRu.className} text-[5px] md:text-[14px] antialiased text-bold`}>
           (С чем поможет справиться тебе Стэн?)
         </h2>
-        <AnimatedButton>Наведи на меня</AnimatedButton>
-        {/* Контейнер для анимированного текста и точки */}
+        
         <div className="flex flex-col items-center">
           <div className="relative h-16 w-full max-w-lg overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentWordIndex}
+                key={`word-${currentWordIndex}`}
+                initial="enter"
+                animate={animationPhase}
                 variants={wordVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
                 className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${specialEliteRu.className}`}
                 style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
               >
@@ -145,16 +178,11 @@ export default function Home() {
           {/* Анимированная точка */}
           <div className="h-4 mt-4">
             <motion.div
-              className="h-1.5 w-1.5 rounded-full bg-black/80"
+              key={`dot-${currentWordIndex}`}
+              initial="enter"
+              animate={animationPhase}
               variants={dotVariants}
-              initial="initial"
-              animate={playDrop ? ['fall', 'disappear'] : 'initial'}
-              onAnimationComplete={(definition) => {
-                if (playDrop && definition === 'disappear') {
-                  setCurrentWordIndex((prev) => (prev + 1) % words.length);
-                  setPlayDrop(false);
-                }
-              }}
+              className="mx-auto h-2 w-2 rounded-full bg-black"
             />
           </div>
         </div>

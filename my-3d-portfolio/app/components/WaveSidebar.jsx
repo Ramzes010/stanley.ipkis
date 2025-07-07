@@ -1,13 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function FullScreenMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [isBlinking, setIsBlinking] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // Варианты для меню (оставим без изменений)
+  // Анимация моргания
+  useEffect(() => {
+    let timeoutId;
+    let intervalId;
+
+    const blink = () => {
+      setIsBlinking(true);
+      setTimeout(() => {
+        setIsBlinking(false);
+
+        // 50% шанс на двойное моргание
+        if (Math.random() < 0.5) {
+          timeoutId = setTimeout(() => {
+            setIsBlinking(true);
+            setTimeout(() => setIsBlinking(false), 120);
+          }, 150);
+        }
+      }, 120);
+    };
+
+    const startBlinking = () => {
+      blink();
+      intervalId = setInterval(() => {
+        blink();
+      }, Math.random() * 4000 + 3000); // 3–7 секунд
+    };
+
+    startBlinking();
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, []);
+
   const menuVariants = {
     open: {
       x: '0%',
@@ -53,7 +88,6 @@ export default function FullScreenMenu() {
 
   const navItems = ['Услуги', 'Помощь', 'Отзывы', 'Контакты'];
 
-  // Анимация точки с падением и деформацией
   const dotVariants = {
     initial: {
       opacity: 0,
@@ -82,10 +116,20 @@ export default function FullScreenMenu() {
 
   return (
     <>
-      {/* Анимированная волна-триггер */}
+      {/* Глобальный шрифт */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@300&display=swap');
+        .font-lxgw {
+          font-family: "IBM Plex Serif", serif;
+          font-weight: 300;
+          font-style: normal;
+        }
+      `}</style>
+
+      {/* Кнопка меню */}
       <div
         onClick={toggleMenu}
-        className={`fixed right-0 top-0 z-50 h-full w-16 cursor-pointer`}
+        className="fixed right-0 top-0 z-50 h-full w-16 cursor-pointer"
       >
         <svg
           viewBox="0 0 100 100"
@@ -100,7 +144,7 @@ export default function FullScreenMenu() {
           />
         </svg>
 
-        {/* Иконка-бургер */}
+        {/* Иконка "бургер" */}
         <motion.div
           className="absolute right-4 top-1/2 -translate-y-1/2"
           initial={{ opacity: 1 }}
@@ -114,7 +158,7 @@ export default function FullScreenMenu() {
           />
         </motion.div>
 
-        {/* Иконка-крестик */}
+        {/* Иконка закрытия */}
         <motion.div
           className="absolute right-4 top-1/2 -translate-y-1/2"
           initial={{ opacity: 0 }}
@@ -129,6 +173,7 @@ export default function FullScreenMenu() {
         </motion.div>
       </div>
 
+      {/* Полноэкранное меню */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -137,26 +182,26 @@ export default function FullScreenMenu() {
             animate="open"
             exit="closed"
             transition={menuTransition}
-            className="fixed inset-0 z-40 flex overflow-hidden bg-black text-white"
+            className="fixed inset-0 z-40 flex overflow-hidden bg-black text-white font-lxgw"
           >
             <div className="flex w-full justify-between pt-6 pb-8 px-8 pt-10 md:p-16 md:pt-12">
-              {/* Логотип */}
+              {/* Логотип с морганием */}
               <div>
                 <img
-                  src="/img/logo-2.svg"
+                  src={isBlinking ? '/img/menuLogoCloseEyes.svg' : '/img/menuLogo.svg'}
                   alt="Logo"
-                  className="h-[6vw] w-auto"
+                  className="h-[10vw] w-auto transition-all duration-200"
                 />
               </div>
 
-              {/* Навигация + соцсети */}
-              <div className="flex flex-col items-start justify-between ">
+              {/* Навигация */}
+              <div className="flex flex-col items-start justify-between">
                 <motion.nav
                   variants={navContainerVariants}
                   initial="closed"
                   animate="open"
                   exit="closed"
-                  className="flex flex-col items-start gap-6 text-[4vw] mr-[20vw] font-bold menu-front "
+                  className="flex flex-col items-start gap-6 text-[4vw] mr-[20vw] font-bold"
                 >
                   {navItems.map((item, i) => (
                     <motion.div
@@ -165,18 +210,18 @@ export default function FullScreenMenu() {
                       className="relative flex items-center cursor-pointer"
                       onHoverStart={() => setHoveredIndex(i)}
                       onHoverEnd={() => setHoveredIndex(null)}
-                      style={{ gap: '0.8rem ' }}
+                      style={{ gap: '0.8rem' }}
                     >
                       <AnimatePresence>
                         {hoveredIndex === i && (
                           <motion.div
                             className="bg-white"
                             style={{
-                              width: '0.5vw',
-                              height: '0.5vw',
+                              width: '0.75vw',
+                              height: '0.75vw',
                               borderRadius: '50%',
                               position: 'absolute',
-                              left: '-2.5vw',
+                              left: '-2vw',
                               top: '50%',
                               transform: 'translateY(-50%)',
                             }}
@@ -201,9 +246,10 @@ export default function FullScreenMenu() {
                   ))}
                 </motion.nav>
 
+                {/* Социальные сети */}
                 <div className="flex gap-6 text-lg">
-                  <button className="cursor-pointer">WhatsApp</button>
-                  <button className="cursor-pointer">Instagram</button>
+                  <button className="cursor-pointer opacity-[0.5]  hover:opacity-100 transition-opacity ">WhatsApp</button>
+                  <button className="cursor-pointer opacity-[0.5]  hover:opacity-100 transition-opacity ">Instagram</button>
                 </div>
               </div>
             </div>

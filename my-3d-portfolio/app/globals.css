@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap');
 @import url('/my-3d-portfolio/public/fonts/clarendonbt-light.css');
+@import url('https://fonts.googleapis.com/css2?family=LXGW+Marker+Gothic&display=swap');
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -92,3 +93,6 @@ body {
   font-weight: 400;
 }
 
+.mainNav{
+  font-family: 'LXGW Marker Gothic', sans-serif;
+}
