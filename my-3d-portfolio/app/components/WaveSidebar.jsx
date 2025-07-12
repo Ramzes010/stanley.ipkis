@@ -5,8 +5,58 @@ export default function FullScreenMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isBlinking, setIsBlinking] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  // Отслеживание скролла и наведения
+  useEffect(() => {
+    let scrollTimeout;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // Если мы на первом блоке (высота экрана) - показываем сайдбар
+      if (scrollY < windowHeight * 0.8) {
+        setIsVisible(true);
+        return;
+      }
+
+      // Если прокрутили ниже первого блока - скрываем сайдбар
+      setIsVisible(false);
+    };
+
+    const handleMouseMove = (e) => {
+      const windowWidth = window.innerWidth;
+      const mouseX = e.clientX;
+      
+      // Если мышь в правой части экрана (последние 80px) и сайдбар скрыт
+      if (mouseX > windowWidth - 80 && !isVisible && !isOpen) {
+        setIsHovering(true);
+        setIsVisible(true);
+      } else if (mouseX <= windowWidth - 80 && isHovering) {
+        setIsHovering(false);
+        // Не скрываем сразу, даем время пользователю
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (!isHovering && window.scrollY >= window.innerHeight * 0.8) {
+            setIsVisible(false);
+          }
+        }, 1000);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isVisible, isHovering, isOpen]);
 
   // Анимация моргания
   useEffect(() => {
@@ -54,6 +104,19 @@ export default function FullScreenMenu() {
       borderTopLeftRadius: '75%',
       borderBottomLeftRadius: '30%',
     },
+  };
+
+  const sidebarVariants = {
+    visible: {
+      x: '0%',
+      opacity: 1,
+      transition: { duration: 0.3, ease: 'easeOut' }
+    },
+    hidden: {
+      x: '100%',
+      opacity: 0,
+      transition: { duration: 0.3, ease: 'easeIn' }
+    }
   };
 
   const menuTransition = {
@@ -127,7 +190,9 @@ export default function FullScreenMenu() {
       `}</style>
 
       {/* Кнопка меню */}
-      <div
+      <motion.div
+        variants={sidebarVariants}
+        animate={isVisible ? 'visible' : 'hidden'}
         onClick={toggleMenu}
         className="fixed right-0 top-0 z-50 h-full w-16 cursor-pointer"
       >
@@ -171,7 +236,7 @@ export default function FullScreenMenu() {
             className="h-10 w-10 object-contain"
           />
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Полноэкранное меню */}
       <AnimatePresence>
@@ -256,6 +321,25 @@ export default function FullScreenMenu() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Невидимая область для наведения (только когда сайдбар скрыт) */}
+      {!isVisible && !isOpen && (
+        <div 
+          className="fixed right-0 top-0 z-30 h-full w-16"
+          onMouseEnter={() => {
+            setIsHovering(true);
+            setIsVisible(true);
+          }}
+          onMouseLeave={() => {
+            setIsHovering(false);
+            setTimeout(() => {
+              if (!isHovering && window.scrollY >= window.innerHeight * 0.8) {
+                setIsVisible(false);
+              }
+            }, 1000);
+          }}
+        />
+      )}
     </>
   );
 }

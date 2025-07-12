@@ -89,22 +89,29 @@ export default function Home() {
   const dotVariants = {
     enter: {
       opacity: 0,
-      y: -20,
-      transition: { duration: 0.05 } // Появляется намного быстрее текста
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+      transition: { duration: 0.05 }
     },
     visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.1 }
+      opacity: [1, 1, 1, 1, 1, 0],
+      y:    [0, 0, 24, 24, 24, 24],
+      scaleX: [1, 1, 0.7, 1, 1, 1],
+      scaleY: [1, 1, 1.5, 1, 1, 1],
+      transition: {
+        //      | появл | пауза | падение | восстановл | пауза | исчезает
+        times:   [0,    0.05,   0.15,     0.2,         0.9,    1],
+        duration: 2.5, // исчезает за 0.2с до слова
+        ease: "easeInOut"
+      }
     },
     exit: {
       opacity: 0,
-      y: 40,
-      scaleY: 1.5,
-      transition: { 
-        duration: 0.15,
-        ease: [0.17, 0.67, 0.83, 0.67] // Эффект "падения"
-      }
+      y: 24,
+      scaleX: 1,
+      scaleY: 1,
+      transition: { duration: 0.05 }
     }
   };
 
@@ -176,8 +183,9 @@ export default function Home() {
                 key={`dot-${currentWordIndex}`}
                 initial="enter"
                 animate={animationPhase}
+                exit="exit"
                 variants={dotVariants}
-                className="mx-auto h-2 w-2 rounded-full bg-black"
+                className="mx-auto h-1.5 w-1.5 rounded-full bg-black"
               />
             </div>
           </div>
